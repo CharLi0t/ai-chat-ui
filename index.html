@@ -1,1 +1,57 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Chat</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    .chat-box { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; margin-bottom: 10px; }
+    .message { margin: 5px 0; }
+    .user { text-align: right; color: blue; }
+    .bot { text-align: left; color: green; }
+    input, button { padding: 10px; width: 100%; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h2>พูดคุยกับ AI</h2>
+  <div id="chat" class="chat-box"></div>
+  <input type="text" id="userInput" placeholder="พิมพ์ข้อความ..." />
+  <button onclick="sendMessage()">ส่ง</button>
 
+  <script>
+    const webhookUrl = "https://n8n-on-render-kk4e.onrender.com/webhook/chat"; // เปลี่ยนตาม Webhook จริง
+
+    function appendMessage(text, sender) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.innerText = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendMessage(message, "user");
+      input.value = "";
+
+      try {
+        const response = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }) // n8n Webhook รับข้อความในฟิลด์ "message"
+        });
+
+        const data = await response.json();
+        appendMessage(data.reply || "❌ ไม่สามารถตอบกลับได้", "bot");
+      } catch (err) {
+        appendMessage("❌ เกิดข้อผิดพลาดในการเชื่อมต่อ", "bot");
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
